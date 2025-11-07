@@ -1,5 +1,13 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, sendPasswordResetEmail } from "firebase/auth";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -16,7 +24,10 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
+const googleProvider = new GoogleAuthProvider();
+
 export const signIn = signInWithEmailAndPassword;
 export const signUp = createUserWithEmailAndPassword;
 export const logout = signOut;
 export const resetPassword = sendPasswordResetEmail;
+export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import Sidebar from "../components/Sidebar";
@@ -14,6 +14,7 @@ import Relatorios from "../pages/Relatorios";
 export default function MainLayout({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   if (loading) {
     return (
@@ -68,7 +69,7 @@ export default function MainLayout({ children }) {
         inset: 0,
       }}
     >
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       <div
         style={{

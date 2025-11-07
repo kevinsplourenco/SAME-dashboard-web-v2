@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { auth, db } from "../services/firebase";
+import { auth, db, signInWithGoogle } from "../services/firebase";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 
 const AuthContext = createContext();
 
@@ -61,8 +62,45 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const handleSignInWithGoogle = async () => {
+    try {
+      const result = await signInWithGoogle();
+      return result;
+    } catch (error) {
+      console.error("Erro ao fazer login com Google:", error);
+      throw error;
+    }
+  };
+
+  const handleSignUp = async (email, password) => {
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      return result;
+    } catch (error) {
+      console.error("Erro ao criar conta:", error);
+      throw error;
+    }
+  };
+
+  const handleSignIn = async (email, password) => {
+    try {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      return result;
+    } catch (error) {
+      console.error("Erro ao fazer login:", error);
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      logout, 
+      signInWithGoogle: handleSignInWithGoogle,
+      signUp: handleSignUp,
+      signIn: handleSignIn
+    }}>
       {children}
     </AuthContext.Provider>
   );

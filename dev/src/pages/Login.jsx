@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signIn, auth } from "../services/firebase";
 import { useAuth } from "../hooks";
 import ForgotPassword from "./ForgotPassword";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { signUp, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithGoogle, signUp, signIn } = useAuth();
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,6 +13,24 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+
+  // Se o usuário já está logado, redirecionar para o dashboard
+  if (!loading && user) {
+    navigate("/");
+    return null;
+  }
+
+  // Se está carregando, mostrar tela de carregamento
+  if (loading) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0284c7 0%, #5b21b6 50%, #111827 100%)" }}>
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Carregando...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (mode === "forgot") {
     return <ForgotPassword onBack={() => setMode("login")} />;
@@ -32,7 +49,7 @@ export default function Login() {
         setMessage("Conta criada! Redirecionando...");
         setTimeout(() => navigate("/"), 1500);
       } else {
-        await signIn(auth, email, password);
+        await signIn(email, password);
         navigate("/");
       }
     } catch (err) {

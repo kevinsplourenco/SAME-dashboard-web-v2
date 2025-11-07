@@ -9,10 +9,11 @@ import {
   Users,
   FileText,
   LogOut,
+  ChevronLeft,
 } from "lucide-react";
 import { useAuth } from "../hooks";
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = true, onToggle }) {
   const location = useLocation();
   const { logout } = useAuth();
 
@@ -31,18 +32,46 @@ export default function Sidebar() {
   return (
     <aside
       style={{
-        width: "256px",
+        width: isOpen ? "256px" : "80px",
         backgroundColor: "rgb(31, 31, 46)",
         borderRight: "1px solid rgba(255, 255, 255, 0.1)",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
+        transition: "width 0.3s ease",
+        position: "relative",
       }}
     >
-      <div style={{ padding: "2rem", borderBottom: "1px solid rgba(255, 255, 255, 0.1)" }}>
-        <h1 style={{ color: "rgb(255, 255, 255)", fontSize: "1.5rem", fontWeight: "bold", margin: 0 }}>
-          SAME
-        </h1>
+      <div style={{ padding: "2rem", borderBottom: "1px solid rgba(255, 255, 255, 0.1)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        {isOpen && (
+          <h1 style={{ color: "rgb(255, 255, 255)", fontSize: "1.5rem", fontWeight: "bold", margin: 0 }}>
+            SAME
+          </h1>
+        )}
+        <button
+          onClick={onToggle}
+          style={{
+            backgroundColor: "transparent",
+            border: "none",
+            color: "rgba(255, 255, 255, 0.6)",
+            cursor: "pointer",
+            padding: "0.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "color 0.2s",
+            marginLeft: isOpen ? "auto" : 0,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = "rgb(255, 255, 255)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
+          }}
+          title={isOpen ? "Minimizar" : "Expandir"}
+        >
+          <ChevronLeft size={20} style={{ transform: isOpen ? "rotate(0deg)" : "rotate(180deg)", transition: "transform 0.3s" }} />
+        </button>
       </div>
 
       <nav style={{ flex: "1 1 0%", padding: "2rem 0", overflow: "auto" }}>
@@ -50,16 +79,18 @@ export default function Sidebar() {
           <Link
             key={item.path}
             to={item.path}
+            title={!isOpen ? item.label : ""}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "0.75rem",
-              padding: "1rem 1.5rem",
+              gap: isOpen ? "0.75rem" : "0",
+              padding: isOpen ? "1rem 1.5rem" : "1rem",
               color: isActive(item.path) ? "rgb(139, 92, 246)" : "rgba(255, 255, 255, 0.6)",
               textDecoration: "none",
               borderLeft: isActive(item.path) ? "3px solid rgb(139, 92, 246)" : "3px solid transparent",
               backgroundColor: isActive(item.path) ? "rgba(139, 92, 246, 0.1)" : "transparent",
               transition: "0.2s",
+              justifyContent: isOpen ? "flex-start" : "center",
             }}
             onMouseEnter={(e) => {
               if (!isActive(item.path)) {
@@ -73,9 +104,11 @@ export default function Sidebar() {
             }}
           >
             <item.icon size={20} />
-            <span style={{ fontSize: "0.95rem", fontWeight: 500 }}>
-              {item.label}
-            </span>
+            {isOpen && (
+              <span style={{ fontSize: "0.95rem", fontWeight: 500 }}>
+                {item.label}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
@@ -83,20 +116,22 @@ export default function Sidebar() {
       <div style={{ padding: "1.5rem", borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
         <button
           onClick={logout}
+          title={!isOpen ? "Sair" : ""}
           style={{
             width: "100%",
             display: "flex",
             alignItems: "center",
-            gap: "0.75rem",
-            padding: "0.75rem 1rem",
+            gap: isOpen ? "0.75rem" : "0",
+            padding: isOpen ? "0.75rem 1rem" : "0.75rem",
             backgroundColor: "rgba(239, 68, 68, 0.1)",
             color: "rgb(239, 68, 68)",
             border: "none",
             borderRadius: "0.5rem",
             cursor: "pointer",
             fontSize: "0.95rem",
-            fontWeight: 500,
+            fontWeight: 5,
             transition: "0.2s",
+            justifyContent: isOpen ? "flex-start" : "center",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = "rgba(239, 68, 68, 0.2)";
@@ -106,7 +141,7 @@ export default function Sidebar() {
           }}
         >
           <LogOut size={20} />
-          Sair
+          {isOpen && "Sair"}
         </button>
       </div>
     </aside>
