@@ -8,22 +8,30 @@ export function CashFlowChart() {
 
   const chartData = useMemo(() => {
     const data = {};
+    const dateMap = {}; // Mapa para manter controle das datas reais
 
     cashFlow.forEach((cf) => {
       const date = cf.date ? new Date(cf.date) : null;
       if (!date) return;
 
       let key;
+      let sortDate; // Para ordenação correta
+      
       if (period === "day") {
         key = date.toLocaleDateString("pt-BR");
+        sortDate = date.getTime();
       } else if (period === "month") {
         key = date.toLocaleDateString("pt-BR", { month: "short", year: "numeric" });
+        // Usar o primeiro dia do mês para ordenação
+        sortDate = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
       } else {
         key = date.getFullYear().toString();
+        // Usar o primeiro dia do ano para ordenação
+        sortDate = new Date(date.getFullYear(), 0, 1).getTime();
       }
 
       if (!data[key]) {
-        data[key] = { date: key, entrada: 0, saida: 0 };
+        data[key] = { date: key, entrada: 0, saida: 0, sortDate };
       }
 
       if (cf.type === "entrada") {
@@ -33,7 +41,10 @@ export function CashFlowChart() {
       }
     });
 
-    return Object.values(data).sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Ordena por sortDate e remove esse campo antes de retornar
+    return Object.values(data)
+      .sort((a, b) => a.sortDate - b.sortDate)
+      .map(({ sortDate, ...item }) => item); // Remove sortDate do objeto final
   }, [cashFlow, period]);
 
   return (

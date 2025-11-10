@@ -3,7 +3,8 @@ import { Clock } from "lucide-react";
 import { useProducts } from "../hooks/useProducts";
 
 export function ExpiringProducts() {
-  // Este componente assume que você adicione campo "expirationDate" ao produto
+  // Este componente mostra produtos com data de vencimento próxima
+  // Campo utilizado: expiry (tipo: Timestamp do Firebase)
   const { products } = useProducts();
 
   const expiring = useMemo(() => {
@@ -12,18 +13,70 @@ export function ExpiringProducts() {
 
     return products
       .filter((p) => {
-        if (!p.expirationDate) return false;
-        const expDate = new Date(p.expirationDate);
-        return expDate <= thirtyDaysFromNow && expDate > now;
+        if (!p.expiry) return false;
+        try {
+          // Converte Timestamp do Firebase para Date
+          let expDate;
+          if (p.expiry.toDate) {
+            // Firebase Timestamp
+            expDate = p.expiry.toDate();
+          } else {
+            // String ISO ou Date
+            expDate = new Date(p.expiry);
+          }
+          
+          // Verifica se a data é válida
+          if (isNaN(expDate.getTime())) return false;
+          // Retorna apenas produtos que vencem nos próximos 30 dias
+          return expDate <= thirtyDaysFromNow && expDate > now;
+        } catch (err) {
+          console.error("Erro ao processar data de vencimento:", err);
+          return false;
+        }
       })
-      .sort((a, b) => new Date(a.expirationDate) - new Date(b.expirationDate));
+      .sort((a, b) => {
+        try {
+          let dateA = a.expiry.toDate ? a.expiry.toDate() : new Date(a.expiry);
+          let dateB = b.expiry.toDate ? b.expiry.toDate() : new Date(b.expiry);
+          return dateA - dateB;
+        } catch {
+          return 0;
+        }
+      });
   }, [products]);
 
   const daysUntilExpiry = (date) => {
-    const now = new Date();
-    const expDate = new Date(date);
-    const days = Math.floor((expDate - now) / (1000 * 60 * 60 * 24));
-    return days;
+    try {
+      const now = new Date();
+      let expDate;
+      if (date.toDate) {
+        // Firebase Timestamp
+        expDate = date.toDate();
+      } else {
+        // String ISO ou Date
+        expDate = new Date(date);
+      }
+      const days = Math.floor((expDate - now) / (1000 * 60 * 60 * 24));
+      return days;
+    } catch {
+      return 0;
+    }
+  };
+
+  const formatDate = (date) => {
+    try {
+      let expDate;
+      if (date.toDate) {
+        // Firebase Timestamp
+        expDate = date.toDate();
+      } else {
+        // String ISO ou Date
+        expDate = new Date(date);
+      }
+      return expDate.toLocaleDateString("pt-BR");
+    } catch {
+      return "Data inválida";
+    }
   };
 
   return (
@@ -36,11 +89,13 @@ export function ExpiringProducts() {
       </div>
 
       {expiring.length === 0 ? (
-        <div className="text-center text-white/40 py-8">Nenhum produto vencendo em breve</div>
+        <div className="text-center text-white/40 py-8">
+          <p>Nenhum produto vencendo em breve</p>
+        </div>
       ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {expiring.map((product) => {
-            const days = daysUntilExpiry(product.expirationDate);
+            const days = daysUntilExpiry(product.expiry);
             const isUrgent = days <= 7;
 
             return (
@@ -65,7 +120,7 @@ export function ExpiringProducts() {
                     ? "bg-red-500/30 text-red-300"
                     : "bg-orange-500/30 text-orange-300"
                 }`}>
-                  {new Date(product.expirationDate).toLocaleDateString("pt-BR")}
+                  {formatDate(product.expiry)}
                 </span>
               </div>
             );

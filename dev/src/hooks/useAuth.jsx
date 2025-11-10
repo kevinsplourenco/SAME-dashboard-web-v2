@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged, signOut, sendPasswordResetEmail } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db, signInWithGoogle } from "../services/firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
@@ -92,6 +92,15 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const handleResetPassword = async (email) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error("Erro ao enviar email de recuperação:", error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -99,7 +108,8 @@ export function AuthProvider({ children }) {
       logout, 
       signInWithGoogle: handleSignInWithGoogle,
       signUp: handleSignUp,
-      signIn: handleSignIn
+      signIn: handleSignIn,
+      resetPassword: handleResetPassword
     }}>
       {children}
     </AuthContext.Provider>

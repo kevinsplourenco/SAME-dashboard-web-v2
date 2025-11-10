@@ -50,17 +50,29 @@ export default function Relatorios() {
 
     // Fluxo de caixa diário
     const dailyFlow = {};
+    const dateMap = {}; // Mapa para manter controle das datas reais
+    
     filteredCashFlow.forEach((cf) => {
-      const date = cf.date ? new Date(cf.date).toLocaleDateString("pt-BR") : "Sem data";
-      if (!dailyFlow[date]) {
-        dailyFlow[date] = { date, entrada: 0, saida: 0 };
+      const date = cf.date ? new Date(cf.date) : null;
+      if (!date) return;
+      
+      const dateKey = date.toLocaleDateString("pt-BR");
+      const sortDate = date.getTime(); // Timestamp para ordenação correta
+      
+      if (!dailyFlow[dateKey]) {
+        dailyFlow[dateKey] = { date: dateKey, entrada: 0, saida: 0, sortDate };
       }
       if (cf.type === "entrada") {
-        dailyFlow[date].entrada += parseFloat(cf.amount || cf.valor || 0);
+        dailyFlow[dateKey].entrada += parseFloat(cf.amount || cf.valor || 0);
       } else {
-        dailyFlow[date].saida += parseFloat(cf.amount || cf.valor || 0);
+        dailyFlow[dateKey].saida += parseFloat(cf.amount || cf.valor || 0);
       }
     });
+
+    // Ordena por sortDate e remove esse campo antes de retornar
+    const sortedDailyFlow = Object.values(dailyFlow)
+      .sort((a, b) => a.sortDate - b.sortDate)
+      .map(({ sortDate, ...item }) => item); // Remove sortDate do objeto final
 
     // Status de produtos
     const productStatus = {
@@ -83,7 +95,7 @@ export default function Relatorios() {
       salesByProduct: Object.values(salesByProduct).sort(
         (a, b) => b.amount - a.amount
       ),
-      dailyFlow: Object.values(dailyFlow).sort((a, b) => new Date(a.date) - new Date(b.date)),
+      dailyFlow: sortedDailyFlow,
       productStatus,
       totalRevenue,
       totalExpenses: 0, // totalExpenses não está sendo calculado aqui, pois não temos informações de despesas na página Sales
